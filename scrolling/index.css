@@ -43,7 +43,8 @@ pre {
   max-height: 100vh;
   overflow: auto;
   margin: 0;
-  padding: 10px
+  padding: 10px;
+  z-index: 10;
 }
 
 canvas {
