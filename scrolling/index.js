@@ -71,21 +71,28 @@ const makeSections = [...new Array(5)]
   .map((s, i) => {
     return `<section id="wrapper-${i}">
       <div class="wrapper">
-        <h1>Section ${i}</h1>
+        <h2>Section ${i}</h2>
         <p>${lorem}</p>
       </div>
     </section>`
   })
   .join('')
 
-function pars() {
+function pars (x) {
   return `<div class="pars">
-    ${[...new Array(5)].map(p => `<p>${lorem}</p>`).join('')}
+    ${[...new Array(x || 5)].map(p => `<p>${lorem}</p>`).join('')}
+  </div>`
+}
+
+function title () {
+  return `<div class="intro">
+    <h1>Lorem ipsum dolores sit amet</h1>
   </div>`
 }
 
 const page = [
-  pars(),
+  title(),
+  pars(3),
   makeSections,
   pars(),
 ].join('')
@@ -214,13 +221,13 @@ const scenes = [
   {
     camera: {
       position: {
-        x: 40,
-        y: 60,
-        z: 20,
+        x: 28,
+        y: 106,
+        z: 285,
       },
       rotation: {
-        x: 0,
-        y: 0,
+        x: -0.3,
+        y: 0.1,
         z: 0,
       },
     },
@@ -256,14 +263,14 @@ const scenes = [
   {
     camera: {
       position: {
-        x:-25,
-        y: 330,
-        z: -170,
+        x: 235,
+        y: 65,
+        z: 40,
       },
       rotation: {
-        x: -2,
-        y: 0,
-        z: 3,
+        x: -1,
+        y: 1.2,
+        z: 1,
       },
     },
   },
@@ -287,15 +294,12 @@ function setScene (pct) {
   // })
   console.log({pct})
   console.log('---------------')
-  if (sections[activeScene]) {
-    sections[activeScene - 1].style.color = `rgb(${255 * pct},0,0)`
-  }
+
   if (!scenes[activeScene]) return
   console.log(`val for ActiveScene ${activeScene}`, scenes[activeScene].camera.position.x)
   console.log(`diff for ActiveScene ${activeScene}`,
     pct * (camera.position.z - scenes[activeScene].camera.position.z)
   )
-  // console.log(`val for PrevScene ${prevScene}`, scenes[prevScene].camera.position.x)
 
   const diff = () => {
     const start = camera.position.x
@@ -328,9 +332,7 @@ function setScene (pct) {
   camera.rotation.y += (pctToUse() * (scenes[activeScene].camera.rotation.y - camera.rotation.y))
   prevChanges.camera.rotation.y = (pctToUse() * (scenes[activeScene].camera.rotation.y - camera.rotation.y))
 
-
   dumpContent.prevChanges = prevChanges
-
 }
 
 function handleScroll(e) {
@@ -345,7 +347,7 @@ function handleScroll(e) {
     setActiveScene()
     const { top, height } = s.getBoundingClientRect()
     if (top < 0 && top > (0 - window.innerHeight)) {
-      s.querySelector('h1').innerText = `Section ${i} is active: ${top}px`
+      // s.querySelector('h2').innerText = `Section ${i} is active: ${top}px`
       const pct = Math.sqrt(Math.pow((top / height), 2))
       console.log(pct)
       setScene(pct)
