@@ -35,8 +35,9 @@ h1 {
   position: relative;
   width: 80vw;
   border: solid 1px ;
+  color: black;
+  background: rgba (255,255,255, 0.5);
   padding: 5vw 10vw;
-  color: white;
   margin: 0 auto;
   font-size: 80px;
   top: 50%; 
