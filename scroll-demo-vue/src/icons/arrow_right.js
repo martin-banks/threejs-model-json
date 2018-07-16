@@ -1,0 +1,1 @@
+export default `<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" width="300" height="210" viewBox="0 0 300 210"><title>arrow_right</title><polygon points="150 0 300 105 150 210 150 140 0 140 0 70 150 70 150 0"/></svg>`
