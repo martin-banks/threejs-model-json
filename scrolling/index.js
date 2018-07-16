@@ -39,6 +39,8 @@ const backLight = new THREE.DirectionalLight(0xffffff, 1)
 backLight.position.set(-50, 0, -100).normalize()
 scene.add(backLight)
 
+
+// Setup basic article page content
 const app = document.createElement('div')
 app.id = 'app'
 document.body.appendChild(app)
@@ -50,6 +52,8 @@ const model = document.createElement('div')
 model.id = 'model'
 document.body.appendChild(model)
 
+
+// load object model and material
 const mtlLoader = new THREE.MTLLoader()
 mtlLoader.setPath('./model/')
 mtlLoader.load('Small_Tropical_Island.mtl', material => {
@@ -62,7 +66,7 @@ mtlLoader.load('Small_Tropical_Island.mtl', material => {
   })
 })
 
-
+// content for data dump - view config onscreen
 const dumpContent = {
   sections: [],
 }
@@ -142,7 +146,7 @@ const mods = [
   // for every tick set all values of camera rotation.position
   // that can be changed for accurate update/reset
   {
-    func(el, pct) {
+    func (el, pct) {
       el.style.color = `rgb(${255 * pct},0,0)`
       camera.position.y = 110 * pct
       camera.position.x = 100 * pct
@@ -150,13 +154,13 @@ const mods = [
     }
   },
   {
-    func(el, pct) {
+    func (el, pct) {
       camera.position.z = (200 * pct)
       camera.rotation.y = angle(180) * pct
     }
   },
   {
-    func(el, pct) {
+    func (el, pct) {
       camera.position.z = 100 - (100 * pct)
     }
   }
@@ -303,7 +307,7 @@ function setScene (pct) {
 
   const diff = () => {
     const start = camera.position.x
-  const end = scenes[activeScene].camera.position.x
+    const end = scenes[activeScene].camera.position.x
     return start - end
   }
 

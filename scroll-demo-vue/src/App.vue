@@ -46,5 +46,9 @@ export default {
 @import index
 @import reset
 
+canvas
+  border: solid 1px black
+  position: absolute
+  z-index: 10000
 
 </style>
