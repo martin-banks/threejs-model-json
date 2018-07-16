@@ -1,7 +1,7 @@
 
 ### Additional custom ignores ###
-*.obj
-*.mtl
+# *.obj
+# *.mtl
 model.json
 *r2-d2*
 *R2D2*

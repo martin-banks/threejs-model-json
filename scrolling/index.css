@@ -1,6 +1,6 @@
 html, body {
   margin: 0;
-  padding: 100px 0;
+  padding: 0;
   font-family: sans-serif;
 }
 * {
@@ -9,32 +9,67 @@ html, body {
 }
 
 section {
+  /* border: solid 5px orange */
   width: 100vw;
-  height: 100vh;
-  border: solid 5px orange
+  height: 150vh;
 }
 
 .wrapper {
-  border: solid 1px grey;
+  /* border: solid 1px grey; */
+  background: rgba(255,255,255, 0.5);
   padding: 20px;
   max-width: 600px;
   left: 50%;
-  top: 100%;
-  transform: translate(-50%, -100%)
+  top: 50%;
+  transform: translate(-50%, -50%)
+}
+
+.intro {
+  position: relative;
+  height: 85vh;
+  /* padding: 20vh 0; */
+  /* background: white; */
+  /* padding-top: 30vh; */
+}
+h1 {
+  position: relative;
+  width: 80vw;
+  border: solid 1px ;
+  color: black;
+  background: rgba(255,255,255, 0.5);
+  padding: 5vw 10vw;
+  margin: 0 auto;
+  font-size: 80px;
+  top: 50%; 
+  transform: translate(0, -50%)
+}
+.pars {
+  margin: 0 auto;
+  padding: 20px;
+  background: rgba(255,255,255, 1);
 }
 p {
   max-width: 600px;
-  margin: 20px auto
+  margin: 20px auto;
 }
 
 pre {
   position: fixed;
   top: 0;
   left: 0;
-  background: rgba(0,0,0, 0.4);
-  color: lime;
+  background: rgba(0,0,0, 0.6);
+  color: #bada55;
   width: 300px;
+  max-height: 100vh;
   overflow: auto;
   margin: 0;
-  padding: 10px
+  padding: 10px;
+  z-index: 10;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1
 }
