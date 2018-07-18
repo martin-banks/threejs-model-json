@@ -292,11 +292,12 @@ THREE.MTLLoader.MaterialCreator.prototype = {
     }
 
     function resolveURL(baseUrl, url) {
+      // console.log('resolving', url)
       if (typeof url !== 'string' || url === '') return ''
       
       // ! additional checks for url / data
       // ? should this be in the loadTexture method??
-      // if (/^data:image?:\/\//i.test(url)) return url
+      if (/^data:image?\//i.test(url)) return url
 
       // Absolute URL
       if (/^https?:\/\//i.test(url)) return url
@@ -445,7 +446,7 @@ THREE.MTLLoader.MaterialCreator.prototype = {
   },
 
   loadTexture: function(url, mapping, onLoad, onProgress, onError) {
-    console.log({ url })
+    // console.log({ url })
     // replace image url with base 64
     // https://codepen.io/tamlyn/pen/RNrQVq
 
