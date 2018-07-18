@@ -22,6 +22,16 @@ export default {
   },
   methods: {},
   computed: {},
+  mounted () {
+    window.addEventListener('scroll', () => {
+      const { top, height } = this.$el.getBoundingClientRect()
+      if (top < 0 && top > 0 - height) {
+        const { top, height } = this.$el.getBoundingClientRect()
+        this.$emit('activeindex', this.index)
+        this.$emit('activepct', (top * -1) / height)
+      }
+    })
+  }
 }
 </script>
 
@@ -30,7 +40,7 @@ export default {
 @import index
 
 .section__wrapper
-  height: 80vh
+  height: 120vh
   border: solid 5px orange
 
 .content
@@ -40,6 +50,10 @@ export default {
   top: 50%
   left: 50%
   transform: translate(-50%, -50%)
+  background: rgba(white, 0.6)
+  *
+    background: none
+    text-shadow: none
 
 
 </style>
