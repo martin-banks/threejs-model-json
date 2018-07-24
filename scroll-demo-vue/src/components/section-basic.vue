@@ -40,7 +40,7 @@ export default {
 @import index
 
 .section__wrapper
-  height: 120vh
+  height: 200vh
   border: solid 5px orange
 
 .content
