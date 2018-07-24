@@ -97,9 +97,7 @@ export default {
       10000 // ?? depth ??
     )
 
-
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
-
     this.renderer.setPixelRatio(window.devicePixels)
     this.renderer.setClearColor('#fff')
     this.renderer.setSize(window.innerWidth, window.innerHeight)
@@ -144,28 +142,10 @@ export default {
 
     console.log({ inlineMaterial })
 
-    // mtlLoader.load('Martin_test_1.mtl', material => {
-    //   material.preload()
-
-    //   // objLoader.setMaterials(material)
-    //   // objLoader.setPath('static/test_model/')
-    //   // objLoader.load('Martin_test_1.obj', object => {
-    //   //   this.model = object
-    //   //   this.model.castShadow = true
-    //   //   this.model.receiveShadow = true
-    //   //   this.model.traverse(child => {
-    //   //     child.castShadow = true
-    //   //     child.receiveShadow = true
-    //   //   })
-    //   // })
-    // })
-
     // this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
     // this.controls.enableDamping = true
     // this.controls.campingFactor = 0.25
     // this.controls.enableZoom = true
-
-    
 
     this.scene.add(this.model)
     this.init()
@@ -188,32 +168,32 @@ export default {
         }
       }
       // console.log({ changes })
-      this.camera.position.x -= this.prevChanges.camera.position.x 
+      this.camera.position.x -= this.prevChanges.camera.position.x
       this.camera.position.x += changes.position.x
       this.prevChanges.camera.position.x = changes.position.x
 
-      this.camera.position.y -= this.prevChanges.camera.position.y
-      this.camera.position.y += changes.position.y
-      this.prevChanges.camera.position.y = changes.position.y
+      // this.camera.position.y -= this.prevChanges.camera.position.y
+      // this.camera.position.y += changes.position.y
+      // this.prevChanges.camera.position.y = changes.position.y
 
-      this.camera.position.z -= this.prevChanges.camera.position.z
-      this.camera.position.z += changes.position.z
-      this.prevChanges.camera.position.z = changes.position.z
-
-
+      // this.camera.position.z -= this.prevChanges.camera.position.z
+      // this.camera.position.z += changes.position.z
+      // this.prevChanges.camera.position.z = changes.position.z
 
 
-      this.camera.rotation.x -= this.prevChanges.camera.rotation.x
-      this.camera.rotation.x += (this.pct * (scene.camera.rotation.x - this.camera.rotation.x))
-      this.prevChanges.camera.rotation.x = (this.pct * (scene.camera.rotation.x - this.camera.rotation.x))
 
-      this.camera.rotation.y -= this.prevChanges.camera.rotation.y
-      this.camera.rotation.y += (this.pct * (scene.camera.rotation.y - this.camera.rotation.y))
-      this.prevChanges.camera.rotation.y = (this.pct * (scene.camera.rotation.y - this.camera.rotation.y))
+
+      // this.camera.rotation.x -= this.prevChanges.camera.rotation.x
+      // this.camera.rotation.x += (this.pct * (scene.camera.rotation.x - this.camera.rotation.x))
+      // this.prevChanges.camera.rotation.x = (this.pct * (scene.camera.rotation.x - this.camera.rotation.x))
+
+      // this.camera.rotation.y -= this.prevChanges.camera.rotation.y
+      // this.camera.rotation.y += (this.pct * (scene.camera.rotation.y - this.camera.rotation.y))
+      // this.prevChanges.camera.rotation.y = (this.pct * (scene.camera.rotation.y - this.camera.rotation.y))
       
-      this.camera.rotation.z -= this.prevChanges.camera.rotation.z
-      this.camera.rotation.z += (this.pct * (scene.camera.rotation.z - this.camera.rotation.z))
-      this.prevChanges.camera.rotation.z = (this.pct * (scene.camera.rotation.z - this.camera.rotation.z))
+      // this.camera.rotation.z -= this.prevChanges.camera.rotation.z
+      // this.camera.rotation.z += (this.pct * (scene.camera.rotation.z - this.camera.rotation.z))
+      // this.prevChanges.camera.rotation.z = (this.pct * (scene.camera.rotation.z - this.camera.rotation.z))
     })
 
   },
