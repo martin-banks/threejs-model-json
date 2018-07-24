@@ -14,7 +14,7 @@
       <pre v-if="content.showDump" class="dump">
         {{ JSON.stringify({ project, about }, 'utf-8', 2) }}
       </pre>
-      <used-view :content="content"/>
+      <used-view />
     </div>
   </article>
 </template>
@@ -46,9 +46,9 @@ export default {
 @import index
 @import reset
 
-canvas
-  border: solid 1px black
-  position: absolute
-  z-index: 10000
+// canvas
+//   border: solid 1px black
+//   position: absolute
+//   z-index: 10000
 
 </style>
