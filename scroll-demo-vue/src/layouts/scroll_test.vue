@@ -44,52 +44,88 @@ export default {
         { x: 10, y: 0, z: 300 },
       ],
       currentPos: { x: 0, y: 0 },
+      moon: {
+        r: 10,
+      },
     }
   },
-  methods: {},
+  methods: {
+    angle(degree) {
+      // convert degrees to radians
+      return degree * (Math.PI / 180)
+    },
+  },
   computed: {},
-  mounted () {
+  mounted() {
     const controller = new ScrollMagic.Controller()
     const sections = this.$el.querySelectorAll('section')
     const pre = this.$el.querySelector('pre')
 
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(
-      75,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      10000,
-    )
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     renderer.setPixelRatio(window.devicePixels)
     renderer.setClearColor('#000')
     renderer.setSize(window.innerWidth, window.innerHeight)
     this.$el.querySelector('.three').appendChild(renderer.domElement)
-    const useControlls = window.location.hash.split('#')[1] === 'controlls'
-    if (useControlls) {
-      const orbitControl = new THREE.OrbitControls(camera)
-    }
+    const useControls = window.location.hash.split('#')[1] === 'controls'
+
+    const orbitControl = useControls ? new THREE.OrbitControls(camera) : null
 
     const lights = {
-      ambient: new THREE.AmbientLight('#fff', 0.1),
+      ambient: new THREE.AmbientLight('#fff', 0.3),
       directional: new THREE.DirectionalLight('#fff', 1),
     }
 
     lights.directional.position.y = 200
     lights.directional.position.z = 100
 
-    const geometry = new THREE.SphereGeometry(10, 300, 300)
+    const geometry = new THREE.SphereGeometry(this.moon.r, 300, 300)
     const texture = new THREE.TextureLoader().load('static/moon/moon_2k.jpg')
     const material = new THREE.MeshPhongMaterial({
       // color: '#f00',
       map: texture,
       bumpMap: texture,
-      displacementMap: new THREE.TextureLoader().load('static/moon/moon_2k.jpg'),
-      displacementScale: 0.2,
-      bumpScale: 0.3,
-      shininess: 0,
+      displacementMap: new THREE.TextureLoader().load('static/moon/material_normal.jpg'),
+      displacementScale: 0.6,
+      bumpScale: 0.1,
+      shininess: 1,
     })
-    const object = new THREE.Mesh(geometry, material)
+    const moon = new THREE.Mesh(geometry, material)
+
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(1, 3, 30),
+      new THREE.MeshPhongMaterial({
+        color: '#fff',
+      })
+    )
+
+    const wrapper = new THREE.Mesh()
+    wrapper.add(cone)
+
+    const coneCoords = [
+      {
+        theta: this.angle(1800),
+        phi: this.angle(280),
+      },
+    ]
+
+    moon.add(wrapper)
+
+    wrapper.position.x = (this.moon.r * 1.2) * Math.cos(coneCoords[0].theta) * Math.sin(coneCoords[0].phi)
+    wrapper.position.y = (this.moon.r * 1.2) * Math.sin(coneCoords[0].theta) * Math.sin(coneCoords[0].phi)
+    wrapper.position.z = (this.moon.r * 1.2) * Math.cos(coneCoords[0].phi)
+
+    cone.rotation.x = this.angle(270)
+
+    const target_vec = new THREE.Vector3( 0, 1, 0 )
+    const rotation_matrix = new THREE.Matrix4()
+      .makeRotationX(this.angle(90))
+      .makeRotationY( 0 )
+      .makeRotationZ( coneCoords[0].theta )
+      .lookAt( wrapper.position, target_vec, wrapper.up )
+    wrapper.quaternion.setFromRotationMatrix(rotation_matrix)
+
 
     camera.position.x = this.cameraPos[0].x
     camera.position.y = this.cameraPos[0].y
@@ -99,7 +135,7 @@ export default {
     scene.add(camera)
     scene.add(lights.ambient)
     scene.add(lights.directional)
-    scene.add(object)
+    scene.add(moon)
 
     const dump = () => {
       pre.innerText = JSON.stringify(
@@ -124,11 +160,13 @@ export default {
     const animate = () => {
       renderer.render(scene, camera)
       window.requestAnimationFrame(animate)
-      object.rotation.y += 0.002
-      if (useControlls) dump()
+      // moon.rotation.y += 0.002
+      if (useControls) {
+        dump()
+        orbitControl.update()
+      }
     }
     animate()
-
 
     sections.forEach((s, i) => {
       new ScrollMagic.Scene({
