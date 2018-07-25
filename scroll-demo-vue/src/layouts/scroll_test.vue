@@ -36,12 +36,12 @@ export default {
         { x: 0, y: 0 },
       ],
       cameraPos: [
-        { x: 0, y: 5, z: 30 },
-        { x: 10, y: 0, z: 50 },
-        { x: -10, y: 0, z: 100 },
-        { x: 10, y: 0, z: 60 },
-        { x: -10, y: 0, z: 30 },
-        { x: 10, y: 0, z: 300 },
+        { x: 0, y: 5, z: 40 },
+        { x: -20, y: 0, z: 50 },
+        { x: 20, y: 0, z: 50 },
+        { x: -20, y: 0, z: 40 },
+        { x: 20, y: 0, z: 20 },
+        { x: -20, y: 0, z: 300 },
       ],
       currentPos: { x: 0, y: 0 },
       moon: {
@@ -93,38 +93,55 @@ export default {
     })
     const moon = new THREE.Mesh(geometry, material)
 
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(1, 3, 30),
-      new THREE.MeshPhongMaterial({
-        color: '#fff',
-      })
-    )
-
-    const wrapper = new THREE.Mesh()
-    wrapper.add(cone)
 
     const coneCoords = [
       {
-        theta: this.angle(1800),
+        theta: this.angle(10),
+        phi: this.angle(90),
+      },
+      {
+        theta: this.angle(200),
+        phi: this.angle(30),
+      },
+      {
+        theta: this.angle(45),
         phi: this.angle(280),
+      },
+      {
+        theta: this.angle(300),
+        phi: this.angle(180),
       },
     ]
 
-    moon.add(wrapper)
+  const coneObjects =  coneCoords.map((coords, i) => {
+      const wrapper = new THREE.Mesh()
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(1, 3, 30),
+        new THREE.MeshPhongMaterial({
+          color: '#fff',
+        })
+      )
+      wrapper.add(cone)
+      wrapper.position.x = (this.moon.r * 1.2) * Math.cos(coneCoords[i].theta) * Math.sin(coneCoords[i].phi)
+      wrapper.position.y = (this.moon.r * 1.2) * Math.sin(coneCoords[i].theta) * Math.sin(coneCoords[i].phi)
+      wrapper.position.z = (this.moon.r * 1.2) * Math.cos(coneCoords[i].phi)
+      cone.rotation.x = this.angle(270)
 
-    wrapper.position.x = (this.moon.r * 1.2) * Math.cos(coneCoords[0].theta) * Math.sin(coneCoords[0].phi)
-    wrapper.position.y = (this.moon.r * 1.2) * Math.sin(coneCoords[0].theta) * Math.sin(coneCoords[0].phi)
-    wrapper.position.z = (this.moon.r * 1.2) * Math.cos(coneCoords[0].phi)
+      const target_vec = new THREE.Vector3( 0, 1, 0 )
+      const rotation_matrix = new THREE.Matrix4()
+        .makeRotationX(this.angle(90))
+        .makeRotationY( 0 )
+        .makeRotationZ( coneCoords[0].theta )
+        .lookAt( wrapper.position, target_vec, wrapper.up )
+      wrapper.quaternion.setFromRotationMatrix(rotation_matrix)
 
-    cone.rotation.x = this.angle(270)
+      return wrapper
 
-    const target_vec = new THREE.Vector3( 0, 1, 0 )
-    const rotation_matrix = new THREE.Matrix4()
-      .makeRotationX(this.angle(90))
-      .makeRotationY( 0 )
-      .makeRotationZ( coneCoords[0].theta )
-      .lookAt( wrapper.position, target_vec, wrapper.up )
-    wrapper.quaternion.setFromRotationMatrix(rotation_matrix)
+    })
+
+    coneObjects.forEach(c => {
+      moon.add(c)
+    })
 
 
     camera.position.x = this.cameraPos[0].x
@@ -160,7 +177,7 @@ export default {
     const animate = () => {
       renderer.render(scene, camera)
       window.requestAnimationFrame(animate)
-      // moon.rotation.y += 0.002
+      moon.rotation.y += 0.005
       if (useControls) {
         dump()
         orbitControl.update()
@@ -199,6 +216,7 @@ export default {
 
             this.$el.querySelectorAll('section').forEach((s, index) => {
               // s.style.borderColor = i === index ? '#bada55' : ''
+              s.style.transform = i === index ? 'scale(1.2)' : 'scale(0.2)'
             })
             // this.$el.querySelector('.box').style.transform = `translate(${newCoords.x}%, ${newCoords.y}%)`
             camera.position.x = newCamera.x
@@ -217,6 +235,7 @@ export default {
 @import index
 
 section
+  transition: transform 300ms
   height: 80vh
   // border: solid 10px #333
   color: white
@@ -229,6 +248,7 @@ section
     margin: 0
 
 .inner
+  top: 50%
   background: rgba(black, 0.4)
   bottom: 0
   padding: 20px
