@@ -51,23 +51,24 @@ export default {
   mounted () {
     const controller = new ScrollMagic.Controller()
     const sections = this.$el.querySelectorAll('section')
-    const dump = this.$el.querySelector('pre')
+    const pre = this.$el.querySelector('pre')
 
-    // const scene = new THREE.Scene()
-    // const camera = new THREE.PerspectiveCamera(
-    //   75,
-    //   window.innerWidth / window.innerHeight,
-    //   0.1,
-    //   10000,
-    // )
-    var scene = new THREE.Scene()
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      10000,
+    )
     const renderer = new THREE.WebGLRenderer({ antialias: true })
-
     renderer.setPixelRatio(window.devicePixels)
     renderer.setClearColor('#000')
     renderer.setSize(window.innerWidth, window.innerHeight)
     this.$el.querySelector('.three').appendChild(renderer.domElement)
+    const useControlls = window.location.hash.split('#')[1] === 'controlls'
+    if (useControlls) {
+      const orbitControl = new THREE.OrbitControls(camera)
+    }
 
     const lights = {
       ambient: new THREE.AmbientLight('#fff', 0.1),
@@ -100,12 +101,34 @@ export default {
     scene.add(lights.directional)
     scene.add(object)
 
+    const dump = () => {
+      pre.innerText = JSON.stringify(
+        {
+          camera: {
+            position: {
+              x: camera.position.x,
+              y: camera.position.y,
+              z: camera.position.z,
+            },
+            rotation: {
+              x: camera.rotation.x,
+              y: camera.rotation.y,
+              z: camera.rotation.z,
+            },
+          },
+        },
+        'utf-8',
+        2
+      )
+    }
     const animate = () => {
       renderer.render(scene, camera)
       window.requestAnimationFrame(animate)
       object.rotation.y += 0.002
+      if (useControlls) dump()
     }
     animate()
+
 
     sections.forEach((s, i) => {
       new ScrollMagic.Scene({
@@ -136,18 +159,6 @@ export default {
               z: cameraFrom.z + pct * (cameraTo.z - cameraFrom.z),
             }
 
-            dump.innerText = JSON.stringify(
-              {
-                newPos: newCoords,
-                newCamera,
-                moveFrom,
-                moveTo,
-                index: i,
-                direction: e.scrollDirection,
-              },
-              'utf-8',
-              2
-            )
             this.$el.querySelectorAll('section').forEach((s, index) => {
               // s.style.borderColor = i === index ? '#bada55' : ''
             })
@@ -207,7 +218,7 @@ section:nth-of-type(even)
   // z-index: 999999999999
 
 pre
-  display: none
+  display: block
   position: fixed
   top: 0
   left: 0
