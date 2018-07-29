@@ -19,6 +19,7 @@
 
 <script>
 import ScrollMagic from 'scrollmagic'
+import { setTimeout } from 'timers';
 export default {
   name: 'scroll-test',
   props: [],
@@ -318,6 +319,17 @@ export default {
 
     window.addEventListener('click', handleMouseClick, false)
     window.addEventListener('click', handleMouseMove, false)
+    let resizeTimer = null
+    window.addEventListener('resize', e => {
+      if (resizeTimer) {
+        clearTimeout(resizeTimer)
+      }
+      resizeTimer = setTimeout(() => {
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(window.innerWidth, window.innerHeight)
+      }, 200)
+    })
     console.log(moon)
 
     setTimeout(() => {
