@@ -163,20 +163,20 @@ export default {
 
     const coneCoords = [
       {
-        theta: this.angle(10),
-        phi: this.angle(90),
+        theta: this.angle(30),
+        phi: this.angle(55),
       },
       {
-        theta: this.angle(200),
-        phi: this.angle(30),
+        theta: this.angle(20),
+        phi: this.angle(50),
       },
       {
         theta: this.angle(45),
         phi: this.angle(280),
       },
       {
-        theta: this.angle(300),
-        phi: this.angle(180),
+        theta: this.angle(90),
+        phi: this.angle(300),
       },
     ]
 
@@ -188,7 +188,7 @@ export default {
         })
       )
       const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(1, 3, 30),
+        new THREE.ConeGeometry(0.8, 5, 20),
         new THREE.MeshPhongMaterial({
           color: '#fff',
         })
@@ -297,7 +297,7 @@ export default {
             if (b.distance - a.distance) return 1
             return 0
           })[0]
-          clickedObject.object.material.color.set('#f00')
+          clickedObject.object.material.color.set('#fa0')
         }
       }
       dump()
