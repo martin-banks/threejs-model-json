@@ -213,6 +213,15 @@ export default {
       moon.add(c)
     })
 
+    const satelite = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 2, 2),
+      new THREE.MeshPhongMaterial({
+        color: '#fff',
+      })
+    )
+    satelite.position.x = 20
+    moon.add(satelite)
+
     camera.position.x = this.cameraPos[0].x
     camera.position.y = this.cameraPos[0].y
     camera.position.z = this.cameraPos[0].z
@@ -264,12 +273,24 @@ export default {
     // ! consider re-writing out side of vue
     let clicked = false
     let clickedObject = null
+
+    // config options for satelite orbit
+    let sateliteOrbit = 0
+    const sateliteSpeed = 0.01
+
     // Animation loop
     const animate = () => {
       window.requestAnimationFrame(animate)
       backdrop.rotation.x += 0.0001
       backdrop.rotation.y += 0.0001
       backdrop.rotation.z += 0.000005
+
+      // orbit satelite around moon.
+      // change to using same position as pins to maintain same orientation
+      satelite.position.x = 20 * Math.sin(sateliteOrbit)
+      satelite.position.y = 20 * Math.cos(sateliteOrbit)
+      sateliteOrbit += sateliteSpeed
+
       if (this.scenes[this.active || 0].spin) {
         // Reset the spin to 0 if has completed more than one rotation
         // Otherwise rotating to target angle will have to rewind all rotations
