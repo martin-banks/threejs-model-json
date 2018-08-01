@@ -46,48 +46,50 @@ export default {
       direction: null,
       scenes: [
         {
-          spin: true,
-          rotation: {
+          spin: true, // auto-rotate moon
+          rotation: { // moon rotaion angle
             x: 0, y: 0, z: 0,
           },
-          x: 0, y: 0,
+          // x: 0, y: 0, // coords used to transition sample dom element
         },
         {
           spin: true,
           rotation: {
             x: 0, y: 0, z: 0,
           },
-          x: 100, y: 50,
+          // x: 100, y: 50, // coords used to transition sample dom element
         },
         {
           spin: false,
           rotation: {
             x: 0, y: 2, z: 2,
           },
-          x: 300, y: 400,
+          // x: 300, y: 400, // coords used to transition sample dom element
         },
         {
           spin: false,
           rotation: {
             x: 1, y: 0.5, z: 1,
           },
-          x: 200, y: 500,
+          // x: 200, y: 500, // coords used to transition sample dom element
         },
         {
           spin: true,
           rotation: {
             x: 0, y: 0, z: 0,
           },
-          x: 250, y: 20,
+          // x: 250, y: 20, // coords used to transition sample dom element
         },
         {
           spin: false,
           rotation: {
             x: 0, y: 0, z: 0,
           },
-          x: 0, y: 0,
+          // x: 0, y: 0, // coords used to transition sample dom element
         },
       ],
+
+      // Angles used to position static pins
       coneCoords: [
         {
           theta: this.angle(30),
@@ -106,6 +108,7 @@ export default {
           phi: this.angle(300),
         },
       ],
+      // Coords to move camera for different sections
       cameraPos: [
         { x: 0, y: 5, z: 40 },
         { x: -20, y: 0, z: 50 },
@@ -131,34 +134,45 @@ export default {
     },
   },
   computed: {},
-  mounted() {
-    const controller = new ScrollMagic.Controller()
+  mounted () {
     const sections = this.$el.querySelectorAll('section')
     const pre = this.$el.querySelector('pre')
-    const stats = new Stats()
+    const controller = new ScrollMagic.Controller()
+
+    // Create core 3D elements
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
 
+    // Renereder is the main instance required for rendereing 3D scene
+    // renderer.render(scene, scene) must be called afer any property update
     renderer.setPixelRatio(window.devicePixels)
     renderer.setClearColor('#000')
     renderer.setSize(window.innerWidth, window.innerHeight)
     this.$el.querySelector('.three').appendChild(renderer.domElement)
 
+
+    // Check for url hash to determine if orbit controls are enabled
+    // Orbit controls allow the scene to be manipulated through mouse input
+    // click and drag - move camera around scene center
+    //  scroll - zoom
     const useControls = window.location.hash.split('#')[1] === 'controls'
     const orbitControl = useControls ? new THREE.OrbitControls(camera) : null
+
+    // Create lights reflective materials require lightsource to be visiible
     const lights = {
-      ambient: new THREE.AmbientLight('#fff', 0.15),
+      // light that's everywhere on all surfaces - no shadows
+      ambient: new THREE.AmbientLight('#fff', 0.1),
+      // light from source pointing at scene - casts shadows
       directional: new THREE.DirectionalLight('#fff', 1),
     }
-
     lights.directional.position.y = 200
     lights.directional.position.z = 100
 
     // Create 3D model instalnces
-    // Starfield
+    // Starfield - background image / texture
     const starfield = new THREE.Mesh(
       new THREE.SphereGeometry(1000, 10, 10),
       new THREE.MeshBasicMaterial({
@@ -167,7 +181,7 @@ export default {
         side: THREE.DoubleSide,
       })
     )
-    starfield.scale.x = -1
+    starfield.scale.x = -1 // negative scale turns it inside out (?)
     starfield.name = 'starfield'
 
     // Moon
@@ -187,7 +201,8 @@ export default {
 
     // Static points on moon surface
     // Each point consists of a wrapper and object
-    // 
+    // the wrapper is positioned and oriented to the center of the moon
+    // the model can then be easily manipulated inside the wrapper
     const coneObjects =  this.coneCoords.map((coords, i) => {
       const wrapper = new THREE.Mesh(
         new THREE.BoxGeometry(0,0,0),
@@ -203,7 +218,6 @@ export default {
         })
       )
       cone.name = `cone_${i}`
-
       wrapper.add(cone)
 
       // Make the cones sit on the surface and always point to the center
@@ -212,13 +226,13 @@ export default {
       wrapper.position.z = (this.moon.r * 1.2) * Math.cos(this.coneCoords[i].phi)
       cone.rotation.x = this.angle(270)
 
-      const target_vec = new THREE.Vector3( 0, 1, 0 )
-      const rotation_matrix = new THREE.Matrix4()
+      const coneWrapperVector = new THREE.Vector3(0, 1, 0)
+      const coneWrapperMatrix = new THREE.Matrix4()
         .makeRotationX(this.angle(90))
         .makeRotationY( 0 )
         .makeRotationZ( this.coneCoords[0].theta )
-        .lookAt( wrapper.position, target_vec, wrapper.up )
-      wrapper.quaternion.setFromRotationMatrix(rotation_matrix)
+        .lookAt( wrapper.position, coneWrapperVector, wrapper.up )
+      wrapper.quaternion.setFromRotationMatrix(coneWrapperMatrix)
       return wrapper
     })
 
@@ -230,6 +244,7 @@ export default {
       new THREE.BoxGeometry(0, 0, 0),
       new THREE.MeshBasicMaterial()
     )
+    sateliteWrapper.name = 'satelite_wrapper'
 
     const sateliteModel = new THREE.Mesh(
       new THREE.BoxGeometry(2, 2, 2),
@@ -237,20 +252,27 @@ export default {
         color: '#0af',
       })
     )
+    sateliteModel.name = 'satelite_model'
 
     sateliteWrapper.add(sateliteModel)
     moon.add(sateliteWrapper)
 
+
+    // Set initial cacmera position
     camera.position.x = this.cameraPos[0].x
     camera.position.y = this.cameraPos[0].y
     camera.position.z = this.cameraPos[0].z
 
+    // Add everything to the scene
+    // the moon child elements have been added to the moon as they were created
+    // more than on model can be added to the scene
     scene.add(camera)
     scene.add(lights.ambient)
     scene.add(lights.directional)
     scene.add(starfield)
     scene.add(moon)
 
+    // early dev function - dumps various stats into a target wrapper in the dom
     const dump = fps => {
       pre.innerText = JSON.stringify(
         {
@@ -312,21 +334,25 @@ export default {
 
     // Animation loop
     const animate = () => {
+      // This function updates values of the model and it's children and re-renders the scene 
+      // on every available animation frame
+      // display custom fps meter on screen
       if(!lastCalledTime) {
         lastCalledTime = Date.now()
         this.fps = 0
         return
       }
-      delta = (Date.now() - lastCalledTime)/1000
+      delta = (Date.now() - lastCalledTime) / 1000
       lastCalledTime = Date.now()
       if (fpsCounter === 32) {
-        this.fps = Math.min(1/delta, 60)
+        this.fps = Math.min(1 / delta, 60)
         fpsCounter = 0
       }
-      this.fpsHistory.push(Math.min(1/delta, 60))
+      this.fpsHistory.push(Math.min(1 / delta, 60))
       if (this.fpsHistory.length > 100) this.fpsHistory.shift()
       fpsCounter++
 
+      // rotote starfield background on each tick
       starfield.rotation.x += 0.0001
       starfield.rotation.y += 0.0001
       starfield.rotation.z += 0.000005
@@ -341,14 +367,22 @@ export default {
       }
       sateliteOrbit += sateliteSpeed
 
+      // orient the satelite wrapper to point at the center of the moon
+      // Unlike the pins this must be called on each tick of animation as it orbits the moon
       const sateliteVector = new THREE.Vector3( 0, 1, 0 )
       const sateliteMatrix = new THREE.Matrix4()
         .lookAt(sateliteWrapper.position, sateliteVector, sateliteWrapper.up)
       sateliteWrapper.quaternion.setFromRotationMatrix(sateliteMatrix)
 
+      // Adds auto spin to the satelite model
+      // because the model is a child of wrapper, and the wrapper is being orbitinted and oriented to the moon
+      // adding spin is simple as it doesn't need to condier these other transforms
       sateliteModel.rotation.z = this.angle(sateliteSpin)
       sateliteSpin++
 
+
+      // Some scenes require the moon to be static, others to spin in place
+      // find the boolean in the scene data with the active scene index and act accordingly
       if (this.scenes[this.active || 0].spin) {
         // Reset the spin to 0 if has completed more than one rotation
         // Otherwise rotating to target angle will have to rewind all rotations
@@ -358,20 +392,27 @@ export default {
         }
         moon.rotation.y += 0.003
       }
+
+      // Raycaster is used to detect what elements the mouse intersects with; this can be used for user interaction
+      // As the model is animating we need to update it on each tick
       raycaster.setFromCamera(mouse, camera)
+
+      // The first argument is the parent object to observe (this will not be returned as part of the results)
+      // an array of child objects will be returned
+      // The boolean dictates if it should behave recursively through all children, childrens-children etc
       const intersects = raycaster.intersectObjects(moon.children, true)
+
+      // TODO -- refactor into click event listener
+      // In this example we want to change the color of the object clicked on...
       if (intersects.length) {
         if (clicked) {
           clicked = false
-          // console.log({ intersects })
+          // first check if there is an object that was previously clicked and reset to white
           if (clickedObject) {
             clickedObject.object.material.color.set('#fff')
           }
-          // Change the values of all child objects in intersection paths
-          // intersects.forEach(o => {
-          //   console.log(o.distance)
-          //   o.object.material.color.set('#0aa')
-          // })
+          // Sort the children array by distance from camera (nearest first)
+          // Store the first instance as the active object, then change it's color
           clickedObject = intersects.sort((a, b) => {
             if (a.distance - b.distance) return -1
             if (b.distance - a.distance) return 1
@@ -380,14 +421,23 @@ export default {
           clickedObject.object.material.color.set('#fa0')
         }
       }
+
+      // add dump info the dom
       dump()
+
+      // if use controls have has been detected then update
       if (useControls) {
         orbitControl.update()
       }
+
+      // All hte set up is done, render to updated scene to the dom
       renderer.render(scene, camera)
+
+      // Call this function again (recursively) on next available animation frame
       window.requestAnimationFrame(animate)
     }
     // end animation loop
+
 
     const handleMouseMove = e => {
       // calculate position as percentage of screen width / height
@@ -398,6 +448,7 @@ export default {
       clicked = true
     }
 
+    // Add event listeners
     window.addEventListener('click', handleMouseClick, false)
     window.addEventListener('click', handleMouseMove, false)
     let resizeTimer = null
@@ -413,39 +464,60 @@ export default {
     })
     console.log(moon)
 
-    setTimeout(() => {
-      window.requestAnimationFrame(animate)
-    }, 1000)
+
+    // Call first animation
+    window.requestAnimationFrame(animate)
+
 
     // Scroll magic stuff
+    // http://scrollmagic.io/docs/index.html
+    // Setup a scrollmagic instance for each section
     sections.forEach((s, i) => {
       new ScrollMagic.Scene({
         triggerElement: s,
+        // the duration is measured in pixels - here the height of each section
         duration: s.offsetHeight,
       })
         .on('enter', e => {
+          // when a new section scrolls into the active poisiton
           this.active = i
         })
-        .on('progress', e => {
+        .on('progress', e => { // as the user scrolls ...
+          // if this section is the active section; do something
           if (this.active === i) {
             // s.querySelector('h2').innerText = `progress ${e.progress} \n ${e.scrollDirection}`
+            // store the direction user is scrolling: 'FORWARD' || 'BACKWARD'
             this.direction = e.scrollDirection
 
+            // Store how far through the section they are for use in calculating the transforms
             const pct = e.progress
-            const cameraFrom = this.cameraPos[e.direction === 'FORWARD' ? (i + 1 + 1) : (i + 1 - 1)]
-            const cameraTo = this.cameraPos[i + 1]
+
+            // what section are we scrolling out of, this will change depending on direction
+            // get the next/previous in the scene sequence depending on FORAWRD / BACKWARD
+            const cameraFrom = this.cameraPos[e.direction === 'FORWARD' ? ((i + 1) + 1) : ((i + 1) - 1)]
+            // The current section is offset by one so we have secene options to use before we hit the first section
+            const cameraTo = this.cameraPos[(i + 1)]
+
+            // To calculate new coords for camera:
+            // * end value of previous scene + progress pct * difference between current and next
             const newCamera = {
               x: cameraFrom.x + pct * (cameraTo.x - cameraFrom.x),
               y: cameraFrom.y + pct * (cameraTo.y - cameraFrom.y),
               z: cameraFrom.z + pct * (cameraTo.z - cameraFrom.z),
             }
+            // set new values
             camera.position.x = newCamera.x
             camera.position.y = newCamera.y
             camera.position.z = newCamera.z
 
+            // this.spinning is a boolean that records if this animation is running
+            // required to prevent this running multiple times
+            // It will stop hte auto rotate
+            // get the new rotation values
+            // caluclate difference to current spin
+            // and rotate to those values in linear animation
             if (!this.spinning && !this.scenes[this.active].spin) {
               this.spinning = true
-              console.log('spin to fixed')
               let ticks = 0
               const increment = 100
               const rotationFrom = moon.rotation
@@ -462,14 +534,15 @@ export default {
                 moon.rotation.z += newRotation.z
                 ticks++
                 if (ticks < increment) {
+                  // still animation to do
                   window.requestAnimationFrame(rotateToTarget)
                 } else {
+                  // animation all done
                   this.spinning = false
                 }
               }
               rotateToTarget()
             }
-
 
             // ! Updating values of DOM elements around screen
             // const moveTo = this.scenes[i + 1]
@@ -500,9 +573,7 @@ export default {
 section
   transition: transform 300ms
   height: 80vh
-  // border: solid 10px #333
   color: white
-  // background: rgba(white, 0.2)
   h2
     margin: 0
     margin-bottom: 24px
@@ -522,7 +593,6 @@ section:nth-of-type(even)
     left: 100%
     transform: translate(-100%, 0)
 
-
 .box
   position: fixed
   top: 0
@@ -536,7 +606,6 @@ section:nth-of-type(even)
   position: fixed
   top: 0
   left: 0
-  // z-index: 999999999999
 
 .dataOverlay
   display: block
@@ -551,9 +620,7 @@ section:nth-of-type(even)
   overflow: auto
 
 #fpsmeter
-  // padding: 10px
   margin-bottom: 20px
-  // border: solid 1px lime
   color: white
   p
     width: 100%
