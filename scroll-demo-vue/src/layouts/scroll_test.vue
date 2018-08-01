@@ -213,19 +213,24 @@ export default {
       moon.add(c)
     })
 
-    const satelite = new THREE.Mesh(
+    const sateliteWrapper = new THREE.Mesh(
+      new THREE.BoxGeometry(0, 0, 0),
+      new THREE.MeshBasicMaterial()
+    )
+
+    const sateliteModel = new THREE.Mesh(
       new THREE.BoxGeometry(2, 2, 2),
       new THREE.MeshPhongMaterial({
-        color: '#fff',
+        color: '#0af',
       })
     )
-    satelite.position.x = 20
-    moon.add(satelite)
+
+    sateliteWrapper.add(sateliteModel)
+    moon.add(sateliteWrapper)
 
     camera.position.x = this.cameraPos[0].x
     camera.position.y = this.cameraPos[0].y
     camera.position.z = this.cameraPos[0].z
-
 
     scene.add(camera)
     scene.add(lights.ambient)
@@ -233,6 +238,7 @@ export default {
     scene.add(backdrop)
     scene.add(moon)
 
+    // TODO -- implement into vue state
     const dump = () => {
       pre.innerText = JSON.stringify(
         {
@@ -270,13 +276,15 @@ export default {
 
     // ! DO NOT STORE changable data in data/state
     // ! Significant performance issues
-    // ! consider re-writing out side of vue
+    // ? consider re-writing out side of vue
     let clicked = false
     let clickedObject = null
 
     // config options for satelite orbit
     let sateliteOrbit = 0
     const sateliteSpeed = 0.01
+    const sateliteDistance = 2
+    let sateliteSpin = 0
 
     // Animation loop
     const animate = () => {
@@ -287,9 +295,18 @@ export default {
 
       // orbit satelite around moon.
       // change to using same position as pins to maintain same orientation
-      satelite.position.x = 20 * Math.sin(sateliteOrbit)
-      satelite.position.y = 20 * Math.cos(sateliteOrbit)
+      sateliteWrapper.position.x = this.moon.r * sateliteDistance * Math.sin(sateliteOrbit)
+      sateliteWrapper.position.y = this.moon.r * sateliteDistance * Math.cos(sateliteOrbit)
       sateliteOrbit += sateliteSpeed
+
+      const sateliteVector = new THREE.Vector3( 0, 1, 0 )
+      const sateliteMatrix = new THREE.Matrix4()
+        .lookAt(sateliteWrapper.position, sateliteVector, sateliteWrapper.up)
+      sateliteWrapper.quaternion.setFromRotationMatrix(sateliteMatrix)
+
+      sateliteModel.rotation.z = this.angle(sateliteSpin)
+      sateliteSpin++
+
 
       if (this.scenes[this.active || 0].spin) {
         // Reset the spin to 0 if has completed more than one rotation
@@ -309,6 +326,7 @@ export default {
           if (clickedObject) {
             clickedObject.object.material.color.set('#fff')
           }
+          // Change the values of all child objects in intersection paths
           // intersects.forEach(o => {
           //   console.log(o.distance)
           //   o.object.material.color.set('#0aa')
@@ -397,7 +415,6 @@ export default {
               }
 
               const rotateToTarget = () => {
-                // console.log('applying change')
                 moon.rotation.x += newRotation.x
                 moon.rotation.y += newRotation.y
                 moon.rotation.z += newRotation.z
@@ -411,6 +428,8 @@ export default {
               rotateToTarget()
             }
 
+
+            // ! Updating values of DOM elements around screen
             // const moveTo = this.scenes[i + 1]
             // const moveFrom = this.scenes[e.direction === 'FORWARD' ? i + 1 + 1 : i + 1 - 1]
             // const newCoords = {
