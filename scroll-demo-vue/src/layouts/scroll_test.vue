@@ -35,7 +35,7 @@
 
 <script>
 import ScrollMagic from 'scrollmagic'
-import { setTimeout } from 'timers';
+
 export default {
   name: 'scroll-test',
   props: [],
