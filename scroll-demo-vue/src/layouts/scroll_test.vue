@@ -11,7 +11,23 @@
         <p>Nulla aute amet non enim magna elit laboris Lorem nulla reprehenderit anim. Enim sint id esse magna ut ea veniam excepteur anim ut reprehenderit nostrud. Minim dolore ipsum anim labore sint pariatur veniam aute aute. Do ullamco ipsum eu nulla dolor proident ullamco incididunt id dolore. Tempor ex exercitation laborum do anim esse laboris. Fugiat amet eu aliquip enim laborum reprehenderit aliquip fugiat duis.</p>
       </div>
     </section>
-    <pre></pre>
+    <div class="dataOverlay">
+      <div id="fpsmeter">
+        <p>{{ Math.round(fps) }}fps</p>
+        <div class="fpsHistory">
+          <div
+            v-for="(val, i) in fpsHistory"
+            :key="`fps-${i}`"
+            class="fpsHistory__notch"
+            :style="{
+              width: '10%',
+              height: `${val / 60 * 100}%`
+            }"
+          ></div>
+        </div>
+      </div>
+      <pre></pre>
+    </div>
   </div>
 
 </template>
@@ -24,7 +40,7 @@ export default {
   name: 'scroll-test',
   props: [],
   components: {},
-  data() {
+  data () {
     return {
       active: null,
       direction: null,
@@ -72,31 +88,31 @@ export default {
           x: 0, y: 0,
         },
       ],
+      coneCoords: [
+        {
+          theta: this.angle(30),
+          phi: this.angle(55),
+        },
+        {
+          theta: this.angle(20),
+          phi: this.angle(50),
+        },
+        {
+          theta: this.angle(45),
+          phi: this.angle(280),
+        },
+        {
+          theta: this.angle(90),
+          phi: this.angle(300),
+        },
+      ],
       cameraPos: [
-        {
-          spin: true,
-          x: 0, y: 5, z: 40
-        },
-        {
-          spin: true, 
-          x: -20, y: 0, z: 50
-        },
-        {
-          spin: false,
-          x: 20, y: 0, z: 50
-        },
-        {
-          spin: false,
-          x: -20, y: 0, z: 40
-        },
-        {
-          spin: true,
-          x: 20, y: 0, z: 20
-        },
-        {
-          spin: true,
-          x: -20, y: 0, z: 300
-        },
+        { x: 0, y: 5, z: 40 },
+        { x: -20, y: 0, z: 50 },
+        { x: 20, y: 0, z: 50 },
+        { x: -20, y: 0, z: 40 },
+        { x: 20, y: 0, z: 20 },
+        { x: -20, y: 0, z: 300 },
       ],
       currentPos: { x: 0, y: 0 },
       moon: {
@@ -104,6 +120,8 @@ export default {
       },
       clickedObject: null,
       spinning: false,
+      fps: 0,
+      fpsHistory: [],
     }
   },
   methods: {
@@ -117,12 +135,13 @@ export default {
     const controller = new ScrollMagic.Controller()
     const sections = this.$el.querySelectorAll('section')
     const pre = this.$el.querySelector('pre')
-
+    const stats = new Stats()
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
+
     renderer.setPixelRatio(window.devicePixels)
     renderer.setClearColor('#000')
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -138,17 +157,9 @@ export default {
     lights.directional.position.y = 200
     lights.directional.position.z = 100
 
-    const geometry = new THREE.SphereGeometry(this.moon.r, 300, 300)
-    const texture = new THREE.TextureLoader().load('static/moon/moon_2k.jpg')
-    const material = new THREE.MeshPhongMaterial({
-      map: texture,
-      bumpMap: texture,
-      displacementMap: new THREE.TextureLoader().load('static/moon/material_normal.jpg'),
-      displacementScale: 0.6,
-      bumpScale: 0.1,
-      shininess: 1,
-    })
-    const backdrop = new THREE.Mesh(
+    // Create 3D model instalnces
+    // Starfield
+    const starfield = new THREE.Mesh(
       new THREE.SphereGeometry(1000, 10, 10),
       new THREE.MeshBasicMaterial({
         color: '#fff',
@@ -156,54 +167,56 @@ export default {
         side: THREE.DoubleSide,
       })
     )
-    backdrop.scale.x = -1
+    starfield.scale.x = -1
+    starfield.name = 'starfield'
 
-    const moon = new THREE.Mesh(geometry, material)
+    // Moon
+    const moonTexture = new THREE.TextureLoader().load('static/moon/moon_2k.jpg')
+    const moon = new THREE.Mesh(
+      new THREE.SphereGeometry(this.moon.r, 300, 300),
+      new THREE.MeshPhongMaterial({
+        map: moonTexture,
+        bumpMap: moonTexture,
+        displacementMap: new THREE.TextureLoader().load('static/moon/material_normal.jpg'),
+        displacementScale: 0.6,
+        bumpScale: 0.1,
+        shininess: 1,
+      })
+    )
     moon.name = 'moon'
 
-    const coneCoords = [
-      {
-        theta: this.angle(30),
-        phi: this.angle(55),
-      },
-      {
-        theta: this.angle(20),
-        phi: this.angle(50),
-      },
-      {
-        theta: this.angle(45),
-        phi: this.angle(280),
-      },
-      {
-        theta: this.angle(90),
-        phi: this.angle(300),
-      },
-    ]
-
-    const coneObjects =  coneCoords.map((coords, i) => {
+    // Static points on moon surface
+    // Each point consists of a wrapper and object
+    // 
+    const coneObjects =  this.coneCoords.map((coords, i) => {
       const wrapper = new THREE.Mesh(
         new THREE.BoxGeometry(0,0,0),
         new THREE.MeshPhongMaterial({
           color: '#fff',
         })
       )
+      wrapper.name = `coneWrapper_${i}`
       const cone = new THREE.Mesh(
         new THREE.ConeGeometry(0.8, 5, 20),
         new THREE.MeshPhongMaterial({
           color: '#fff',
         })
       )
+      cone.name = `cone_${i}`
+
       wrapper.add(cone)
-      wrapper.position.x = (this.moon.r * 1.2) * Math.cos(coneCoords[i].theta) * Math.sin(coneCoords[i].phi)
-      wrapper.position.y = (this.moon.r * 1.2) * Math.sin(coneCoords[i].theta) * Math.sin(coneCoords[i].phi)
-      wrapper.position.z = (this.moon.r * 1.2) * Math.cos(coneCoords[i].phi)
+
+      // Make the cones sit on the surface and always point to the center
+      wrapper.position.x = (this.moon.r * 1.2) * Math.cos(this.coneCoords[i].theta) * Math.sin(this.coneCoords[i].phi)
+      wrapper.position.y = (this.moon.r * 1.2) * Math.sin(this.coneCoords[i].theta) * Math.sin(this.coneCoords[i].phi)
+      wrapper.position.z = (this.moon.r * 1.2) * Math.cos(this.coneCoords[i].phi)
       cone.rotation.x = this.angle(270)
 
       const target_vec = new THREE.Vector3( 0, 1, 0 )
       const rotation_matrix = new THREE.Matrix4()
         .makeRotationX(this.angle(90))
         .makeRotationY( 0 )
-        .makeRotationZ( coneCoords[0].theta )
+        .makeRotationZ( this.coneCoords[0].theta )
         .lookAt( wrapper.position, target_vec, wrapper.up )
       wrapper.quaternion.setFromRotationMatrix(rotation_matrix)
       return wrapper
@@ -235,13 +248,13 @@ export default {
     scene.add(camera)
     scene.add(lights.ambient)
     scene.add(lights.directional)
-    scene.add(backdrop)
+    scene.add(starfield)
     scene.add(moon)
 
-    // TODO -- implement into vue state
-    const dump = () => {
+    const dump = fps => {
       pre.innerText = JSON.stringify(
         {
+          fps: Math.round(this.fps),
           active: this.active,
           moon: {
             rotation: {
@@ -267,6 +280,11 @@ export default {
               z: camera.rotation.z,
             },
           },
+          satelite: {
+            sateliteSpeed,
+            sateliteDistance,
+            sateliteOrbit,
+          }
         },
         'utf-8',
         2
@@ -286,17 +304,41 @@ export default {
     const sateliteDistance = 2
     let sateliteSpin = 0
 
+
+    let lastCalledTime = 1
+    // let fps = 1
+    let delta = 1
+    let fpsCounter = 0
+
     // Animation loop
     const animate = () => {
-      window.requestAnimationFrame(animate)
-      backdrop.rotation.x += 0.0001
-      backdrop.rotation.y += 0.0001
-      backdrop.rotation.z += 0.000005
+      if(!lastCalledTime) {
+        lastCalledTime = Date.now()
+        this.fps = 0
+        return
+      }
+      delta = (Date.now() - lastCalledTime)/1000
+      lastCalledTime = Date.now()
+      if (fpsCounter === 32) {
+        this.fps = Math.min(1/delta, 60)
+        fpsCounter = 0
+      }
+      this.fpsHistory.push(Math.min(1/delta, 60))
+      if (this.fpsHistory.length > 100) this.fpsHistory.shift()
+      fpsCounter++
+
+      starfield.rotation.x += 0.0001
+      starfield.rotation.y += 0.0001
+      starfield.rotation.z += 0.000005
 
       // orbit satelite around moon.
       // change to using same position as pins to maintain same orientation
       sateliteWrapper.position.x = this.moon.r * sateliteDistance * Math.sin(sateliteOrbit)
       sateliteWrapper.position.y = this.moon.r * sateliteDistance * Math.cos(sateliteOrbit)
+      if (sateliteOrbit >= this.angle(360)) {
+        const offset = sateliteOrbit - this.angle(360)
+        sateliteOrbit = offset
+      }
       sateliteOrbit += sateliteSpeed
 
       const sateliteVector = new THREE.Vector3( 0, 1, 0 )
@@ -306,7 +348,6 @@ export default {
 
       sateliteModel.rotation.z = this.angle(sateliteSpin)
       sateliteSpin++
-
 
       if (this.scenes[this.active || 0].spin) {
         // Reset the spin to 0 if has completed more than one rotation
@@ -344,7 +385,9 @@ export default {
         orbitControl.update()
       }
       renderer.render(scene, camera)
+      window.requestAnimationFrame(animate)
     }
+    // end animation loop
 
     const handleMouseMove = e => {
       // calculate position as percentage of screen width / height
@@ -354,7 +397,6 @@ export default {
     const handleMouseClick = e => {
       clicked = true
     }
-
 
     window.addEventListener('click', handleMouseClick, false)
     window.addEventListener('click', handleMouseMove, false)
@@ -496,7 +538,7 @@ section:nth-of-type(even)
   left: 0
   // z-index: 999999999999
 
-pre
+.dataOverlay
   display: block
   position: fixed
   top: 0
@@ -507,5 +549,28 @@ pre
   height: 50vh
   padding: 20px
   overflow: auto
+
+#fpsmeter
+  // padding: 10px
+  margin-bottom: 20px
+  // border: solid 1px lime
+  color: white
+  p
+    width: 100%
+    text-align: right
+
+.fpsHistory
+  position: relative
+  height: 50px
+  display: flex
+  border-top: solid 1px rgba(white, 0.6)
+
+  &__notch
+    flex: 1 1 auto
+    display: inline-block
+    border-top: solid 3px rgba(lime, 0.8)
+    background: rgba(lime, 0.15)
+    vertical-align: bottom
+    align-self: flex-end
 
 </style>
