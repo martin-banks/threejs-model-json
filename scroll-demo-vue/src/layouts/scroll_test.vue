@@ -13,20 +13,17 @@
     </section>
     <div class="dataOverlay">
       <div id="fpsmeter">
-        <p>{{ Math.round(fps) }}fps</p>
+        <p>Current: {{ Math.round(fps) }}fps | Average: {{ Math.round(fpsHistory.reduce((a, b) => a + b, 0) / 100) }}</p>
         <div class="fpsHistory">
           <div
             v-for="(val, i) in fpsHistory"
             :key="`fps-${i}`"
             class="fpsHistory__notch"
-            :style="{
-              width: '10%',
-              height: `${val / 60 * 100}%`
-            }"
+            :style="styles__fpsBar(val)"
           ></div>
         </div>
       </div>
-      <pre></pre>
+      <pre :style="styles__dump"></pre>
     </div>
   </div>
 
@@ -35,6 +32,9 @@
 
 <script>
 import ScrollMagic from 'scrollmagic'
+import textureB64 from '@/content/moontexture'
+import moontextureDisplacement from '@/content/moontexture_displacement'
+import starsImg from '@/content/starfield'
 
 export default {
   name: 'scroll-test',
@@ -124,7 +124,7 @@ export default {
       clickedObject: null,
       spinning: false,
       fps: 0,
-      fpsHistory: [],
+      fpsHistory: [... new Array(100)],
     }
   },
   methods: {
@@ -132,8 +132,23 @@ export default {
       // convert degrees to radians
       return degree * (Math.PI / 180)
     },
+    styles__fpsBar (val) {
+      const color = opacity => `hsla(${(Math.max(val - 10, 0) / 60) * 150}, 100%, 50%, ${opacity})`
+      return {
+        width: '10%',
+        height: `${val / 60 * 100}%`,
+        background: color(0.4),
+        borderTop: `solid 3px ${color(1)}`,
+      }
+    },
   },
-  computed: {},
+  computed: {
+    styles__dump () {
+      return {
+        display: window.location.hash === '#clear' ? 'none' : 'block'
+      }
+    }
+  },
   mounted () {
     const sections = this.$el.querySelectorAll('section')
     const pre = this.$el.querySelector('pre')
@@ -177,7 +192,8 @@ export default {
       new THREE.SphereGeometry(1000, 10, 10),
       new THREE.MeshBasicMaterial({
         color: '#fff',
-        map: new THREE.TextureLoader().load('static/backdrop/stars_milky_way_2k.jpg'),
+        // map: new THREE.TextureLoader().load('static/backdrop/stars_milky_way_2k.jpg'),
+        map: new THREE.TextureLoader().load(starsImg),
         side: THREE.DoubleSide,
       })
     )
@@ -185,14 +201,18 @@ export default {
     starfield.name = 'starfield'
 
     // Moon
-    const moonTexture = new THREE.TextureLoader().load('static/moon/moon_2k.jpg')
+    // const moonTexture = new THREE.TextureLoader().load('static/moon/moon_2k.jpg')
+    const moonTexture = new THREE.TextureLoader().load(textureB64)
+    const moonDisplacement = new THREE.TextureLoader().load(moontextureDisplacement)
     const moon = new THREE.Mesh(
       new THREE.SphereGeometry(this.moon.r, 300, 300),
       new THREE.MeshPhongMaterial({
         map: moonTexture,
+        // map: new THREE.TextureLoader().load(textureB64),
         bumpMap: moonTexture,
-        displacementMap: new THREE.TextureLoader().load('static/moon/material_normal.jpg'),
-        displacementScale: 0.6,
+        // displacementMap: new THREE.TextureLoader().load('static/moon/material_normal.jpg'),
+        displacementMap: moonDisplacement,
+        displacementScale: 0.2,
         bumpScale: 0.1,
         shininess: 1,
       })
@@ -344,7 +364,7 @@ export default {
       }
       delta = (Date.now() - lastCalledTime) / 1000
       lastCalledTime = Date.now()
-      if (fpsCounter === 32) {
+      if (fpsCounter === 16) {
         this.fps = Math.min(1 / delta, 60)
         fpsCounter = 0
       }
@@ -606,6 +626,7 @@ section:nth-of-type(even)
   position: fixed
   top: 0
   left: 0
+  z-index: -1
 
 .dataOverlay
   display: block
@@ -615,9 +636,15 @@ section:nth-of-type(even)
   background: rgba(black, 0.6)
   color: lime
   width: 300px
-  height: 50vh
+  max-height: 100vh
   padding: 20px
+  padding-top: 50px
   overflow: auto
+  border: solid 1px rgba(white, 0.2)
+  *
+    text-shadow: none
+    font-size: 14px
+    line-height: 1.3
 
 #fpsmeter
   margin-bottom: 20px
@@ -625,6 +652,7 @@ section:nth-of-type(even)
   p
     width: 100%
     text-align: right
+    color: #888
 
 .fpsHistory
   position: relative
@@ -636,7 +664,7 @@ section:nth-of-type(even)
     flex: 1 1 auto
     display: inline-block
     border-top: solid 3px rgba(lime, 0.8)
-    background: rgba(lime, 0.15)
+    // background: rgba(lime, 0.15)
     vertical-align: bottom
     align-self: flex-end
 
