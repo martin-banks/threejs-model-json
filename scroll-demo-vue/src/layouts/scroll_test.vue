@@ -232,12 +232,21 @@ export default {
       )
       wrapper.name = `coneWrapper_${i}`
       const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(0.8, 5, 20),
+        new THREE.CylinderGeometry(0.2, 0.2, 5, 32),
         new THREE.MeshPhongMaterial({
           color: '#fff',
         })
       )
       cone.name = `cone_${i}`
+
+      const pinHead = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 20, 20),
+        new THREE.MeshPhongMaterial({
+          coolor: '#fff',
+        })
+      )
+      pinHead.position.set(0, -3, 0)
+      cone.add(pinHead)
       wrapper.add(cone)
 
       // Make the cones sit on the surface and always point to the center
